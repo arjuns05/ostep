@@ -1,0 +1,58 @@
+Scheduling:
+    - Scheduling policies are used to assign operations on the CPU, seeing which process is assigned on the CPU at some time, etc. 
+    - Assumptiosn as of now:
+        - each process runs for the same amount of time
+        - all jobs arrive at the same time
+        - all jobs only use the CPU (no I/O)
+        - the run-time of each job is known 
+    - Some metrics:
+        - Turnaround time: Time of completion - Time of arrival
+        - Since we assume each job is coming at the same time, Time of arrival is the same, so real metric is Time of completion 
+    - Fairness, Jain's Fairness Index, the scheduler can prioritize performance but some jobs can never run, which is a tradeoff
+    - Going Into Some Algorithms:
+        - FIFO: first job in, first job out, 
+        - A, then B, then C 
+        - A: 10, b: 20: C: 30, avg: 20
+        - If each job doesn't run for the same amount of time, scheduling a job later would increase overall turnaround a lot
+        - We can be greedy and prioritize higher turnaround jobs fist
+        - Generally, you would queue up shorter tasks before the longer tasks
+    - SJF: shortest job first
+        - assinging the shortest job first reduces turnaround time, which is completion time - arrival time 
+        - Schedulers are now prepemptive, before used to be non-preemptive, which wouldrun each job to completion without running a new job
+        - SJF is optimal given that each job arrives at the same time
+        - This tends to fail when a big job is running and a job arrives in the middle of that job (towards beginning), as we have to pretty much wait for big job before the new, smaller job can start
+    - Shortest time to completion first
+        - Example, A runs for 120 seconds, at t= 0, B arrives at t = 10, needs 10 seconds, and C arrives at t = 10, and runs for 10 seconds
+        - Shortest time-to-completion first/Preemptive shortest job first scheduler 
+        - When a new job enters our system, this scheduler determines which of the remaining jobs has the least time left (includes current one), and will just context switch or remain at that one
+        - So for our example, when B arrives, A would have ran for 10 seconds, then B and C would run, with 10, 20 seconds each turnaround time, and then A would run for 110 seconds after
+        - Average: 10 + 20 + 120/3 --> 50 seconds
+New Metric: Response time
+    - Response time: Time of first run - Time of arrival 
+    - so here we try to run as much as we can in short bursts, so something like round robin would work 
+    - SCTF is not good for response time, let's say 3 jobs arrive at the same time, the third one has to wait for the previous two jobs to run entirely
+
+    Round Robin:
+        - Round robin scheduling means that instead of running jobs to completion you run a job for a time slice (scheduling quantum) and then switch to the next job in the run queue
+        - It does this till the job is finished, known as time-slicing as well
+        - Let's, say A,B,C arrive to the system at the same time, each running for 5 seconds
+        - SJF would finish all,making average response time, 0 + 5 + 10 --> 5
+        - RR with a slice time of 1 second would make it 1 + 2 + 3 --> average of 2 
+        - Length of time slice changes RR a lot, shorter better for response time, however if you make it too small, the overhead of context switching will result in poor performance 
+        - Amortization: there is some cost to an operation, incurring that cost less ofte, total cost is reduced, 
+            - if context switch time is 1ms, and time slice is 10ms, the context switch cost is 10 percent, so amortizing it, means increasing time slice to 100ms, so we see a 1 percent cost
+        -Deciding on length of time slice presents a trade-off, making it long enough to amortize the cost of switching without making it excessively long
+        - Cost of context switch comes from switching registers, the state build up in CPU cache, TLB, branch predictors, and on-chip hardware
+        - Switching to another job makes the state flush and run to a new state
+        - RR does pretty poor with turnaround time, but is better for response time
+        - Generally any policy that is fair, which divides up jobs over CPUs is going to be poor on turnaround time
+        - Overlap operations to maximize system utilization, making disk I/O, sending messages to remote machines
+    Dealing with I/O exception we assumed:
+    - In reality, jobs will do I/O
+    - Example, jobs A,B which need 50ms of CPU time, A runs for 10 ms and then issues I/O taking 10 ms, where B uses CPu for 50 and does no I/O
+    - Scheduler would be optimal if it split up the jobs so when A did I/O, B could run
+    - Approach is to treat each 10-ms sub-job of A as an independent job, so when system starts its choice si to schedule A as 10ms job or B 
+        - This allows overlap to happen,
+        - This is how a scheduler can incorporate I/O, it can split it into sub-jobs, so while sub-job does I/O, the other CPU-intensive jobs can use the processor
+    - Scheduler will not know the length of the job, so shortest time to completion first, shortest job first assumptions so far won't work 
+    - 
